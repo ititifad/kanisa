@@ -8,6 +8,31 @@ class Member(models.Model):
         ('Kiume', 'Kiume'),
         ('Kike', 'Kike')
     )
+
+    AJIRA = (
+        ('Ameajiriwa', 'Ameajiriwa'),
+        ('Amejiajiri', 'Amejiajiri'),
+        ('Hana Kazi', 'Hana Kazi'),
+    )
+
+    MAHUSIANO = (
+        ('Ameoa', 'Ameoa'),
+        ('Ameolewa', 'Ameolewa'),
+        ('Hajaolewa', 'Hajaolewa'),
+        ('Hajaoa', 'Hajaoa')
+    )
+
+    UBAATIZO = (
+        ('Maji Mengi', 'Maji Mengi'),
+        ('Maji Kidogo', 'Maji Kidogo')
+    )
+
+    
+    ZAKA = (
+        ('Anatoa Zaka', 'Anatoa Zaka'),
+        ('Hatoi Zaka', 'Hatoi Zaka')
+    )
+
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=200)
     tarehe_kuzaliwa = models.DateField()
@@ -17,17 +42,18 @@ class Member(models.Model):
     kumpokea_yesu = models.DateField()
     mahali_anakotoka = models.CharField(max_length=200, help_text='mahali alikompokea yesu')
     dhehebu = models.CharField(max_length=200)
-    dhehebu_alilookolea = models.CharField(max_length=200)
+    dhehebu_alikookokea = models.CharField(max_length=200)
     image = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True, blank=True)
     tarehe_ubaatizo = models.DateField()
     mahali_ubatizo = models.CharField(max_length=200)
-    maji_mengi = models.BooleanField(default=False)
+    maji_mengi = models.CharField(max_length=200, choices=UBAATIZO)
     trh_kujazwa_roho_mtakatifu  = models.DateField()
     mahali_roho_mtakatifu = models.CharField(max_length=200, default='Geita')
     huduma_aliyonayo = models.CharField(max_length=200)
-    anatoa_zaka = models.BooleanField(default=False)
-    ameajiriwa = models.BooleanField(default=False)
-    ameoa_ameolewa = models.BooleanField(default=False)
+    namba_ya_zaka = models.CharField(max_length=200, blank=True)
+    anatoa_zaka = models.CharField(max_length=200, choices=ZAKA)
+    ameajiriwa = models.CharField(max_length=200, choices=AJIRA)
+    ameoa_ameolewa = models.CharField(max_length=200, choices=MAHUSIANO)
     created_at = models.DateTimeField(auto_now_add=True)
     
     
@@ -41,11 +67,14 @@ class Member(models.Model):
 
     def get_total_paid_fee(self):
         return sum(member.payment for member in self.member_fee.all())
+    
+    def get_total_zaka(self):
+        return sum(member.payment for member in self.member_zaka.all())
 
     def get_absolute_url(self):
         return reverse("member_detail", kwargs={"pk": self.pk})
 
-class FeeType(models.Model):
+class Offering(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
     
@@ -59,8 +88,20 @@ class Payment(models.Model):
     member = models.ForeignKey(Member, related_name='member_fee', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     payment = models.DecimalField(decimal_places=2, max_digits=12)
-    feetype =  models.ForeignKey(FeeType, on_delete=models.SET_NULL, null=True)
+    feetype =  models.ForeignKey(Offering, on_delete=models.SET_NULL, null=True)
     paid = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return str(self.member.name)
+    
+class Zaka(models.Model):
+    member = models.ForeignKey(Member, related_name='member_zaka', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    payment = models.DecimalField(decimal_places=2, max_digits=12)
+
+
+    class Meta:
+        verbose_name_plural = 'Zaka'
     
     def __str__(self):
         return str(self.member.name)
